@@ -1,0 +1,19 @@
+{
+  "url": "https://syncvideocgs.web.app/?v=20",
+  "browser": "auto",
+  "window_mode": "app",
+  "start_maximized": false,
+  "close_launcher_when_browser_closes": true,
+  "browser_flags": [
+    "--no-first-run",
+    "--disable-session-crashed-bubble",
+    "--autoplay-policy=no-user-gesture-required",
+    "--disable-features=Translate"
+  ],
+  "start_minimized": false,
+  "use_custom_window_size": true,
+  "window_width": 1280,
+  "window_height": 720,
+  "window_x": 100,
+  "window_y": 60
+}
