@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="0" http-equiv="Expires"/>
+<meta content="no-cache" http-equiv="Pragma"/>
+<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="strict-origin-when-cross-origin" name="referrer"/>
+<title>SyncVid 영상 방송</title>
+<script>
+   // Old links such as ?v=22 do not select a release. Keep only useful room settings.
+    (function cleanLegacyVersionFromAddress() {
+      try {
+        const current = new URL(window.location.href);
+        let changed = false;
+
+        ['v', 'version', 'build', 'refresh'].forEach(function (name) {
+          if (current.searchParams.has(name)) {
+            current.searchParams.delete(name);
+            changed = true;
+          }
+        });
+
+        if (changed) {
+          const query = current.searchParams.toString();
+          history.replaceState(
+            {},
+            '',
+            current.pathname + (query ? '?' + query : '') + current.hash
+          );
+        }
+      } catch (error) {
+        // Continue normally when URL cleanup is unavailable.
+      }
+    })();
+  </script>
+<link href="./style.css?build=35" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="language-switcher" id="languageSwitcher">
+  <label for="languageSelect">언어 / Language</label>
+  <select id="languageSelect" aria-label="언어 선택 / Select language">
+    <option value="ko">한국어</option>
+    <option value="en">English</option>
+  </select>
+</div>
+
+<div class="access-gate" id="accessGate">
+<form autocomplete="off" class="access-card" id="accessForm">
+<h1>
+     Enter password
+    </h1>
+<p>
+     Enter the access password to open the video control page.
+    </p>
+<label for="accessPasswordInput">
+     Password
+    </label>
+<input autocomplete="current-password" autofocus="" id="accessPasswordInput" maxlength="80" type="password"/>
+<button class="primary" type="submit">
+     Open
+    </button>
+<p class="access-error hidden" id="accessError" role="alert">
+     Incorrect password.
+    </p>
+</form>
+</div>
+<main class="app access-hidden" id="appRoot">
+
+
+
+
+<section class="card controller-card hidden" id="controllerPanel">
+<div class="controller-static-heading">
+<div>
+<p class="step">
+       Controller
+      </p>
+<h2>
+       Preview, playback, source, and schedule
+      </h2>
+</div>
+</div>
+<div class="controller-content">
+<div class="controller-top-row">
+<div>
+<strong id="selectedSourceTitle">
+        Selected: Local video
+       </strong>
+<span id="controllerActionStatus">
+        Ready
+       </span>
+</div>
+<button class="danger" disabled="" id="stopPublishButton" type="button">
+       Stop publishing
+      </button>
+</div>
+<section class="always-visible-playback" id="controllerPlaybackSection">
+<div class="playback-title-row">
+<div>
+<p class="step">
+         Always visible
+        </p>
+<h2>
+         Video preview and playback
+        </h2>
+</div>
+<span class="low-latency-badge">
+        Low-latency mode
+       </span>
+</div>
+<div class="video-shell controller-video-shell" id="controllerVideoShell">
+<video controls="" id="controllerPreview" playsinline="" preload="auto">
+</video>
+<div class="youtube-preview-shell hidden" id="youtubePreviewShell">
+<div id="youtubeControllerPlayer">
+</div>
+</div>
+<div class="video-overlay" id="controllerOverlay">
+<div>
+<h3>
+          No active source
+         </h3>
+<p>
+          Select a local file or load a YouTube URL/ID.
+         </p>
+</div>
+</div>
+</div>
+<div class="playback-controls">
+<button class="primary" id="playButton" type="button">
+        Play
+       </button>
+<button id="pauseButton" type="button">
+        Pause
+       </button>
+<button id="restartButton" type="button">
+        Restart
+       </button>
+<input aria-label="Local video position" id="seekBar" max="1000" min="0" type="range" value="0"/>
+<output id="timeDisplay">
+        00:00 / 00:00
+       </output>
+<label class="inline-check">
+<input checked="" id="loopInput" type="checkbox"/>
+        Loop
+       </label>
+</div>
+<div class="settings-grid">
+<div class="field">
+<label for="loopDelayInput">
+         Loop wait (seconds)
+        </label>
+<input id="loopDelayInput" max="60" min="0" step="0.1" type="number" value="0.0"/>
+</div>
+<label class="check-field">
+<input checked="" id="rememberPositionInput" type="checkbox"/>
+        Remember local position
+       </label>
+<div class="info-box">
+<strong>
+         SFU + low latency
+        </strong>
+<span>
+         The controller publishes once. Viewers use minimum playout
+                buffering to reduce delay.
+        </span>
+</div>
+</div>
+</section>
+<details class="sub-dropdown" id="controllerSourceSection" open="">
+<summary>
+<span>
+<strong>
+         Source and publishing
+        </strong>
+<small>
+         Choose local video or YouTube and start broadcasting.
+        </small>
+</span>
+<span aria-hidden="true" class="summary-chevron">
+</span>
+</summary>
+<div class="sub-dropdown-content">
+<div class="mode-grid">
+<div class="field">
+<label for="sourceModeSelect">
+          Source mode
+         </label>
+<select id="sourceModeSelect">
+<option value="local">
+           Local video
+          </option>
+<option value="youtube">
+           YouTube / browser tab
+          </option>
+</select>
+</div>
+<div class="selected-source compact-selected-source">
+<strong>
+          Broadcast source
+         </strong>
+<span>
+          Use the button to publish the selected source.
+         </span>
+</div>
+<button class="primary" id="publishSelectedButton" type="button">
+         Publish selected source
+        </button>
+</div>
+<div class="source-panel" id="localPanel">
+<label for="localFileInput">
+         Choose local video
+        </label>
+<input accept="video/*" id="localFileInput" type="file"/>
+<label for="localFileDisplay">
+         Selected file
+        </label>
+<input id="localFileDisplay" readonly="" type="text" value="No local video selected"/>
+<div class="button-row">
+<button id="restoreLocalButton" type="button">
+          Restore saved local video
+         </button>
+</div>
+</div>
+<div class="source-panel hidden" id="youtubePanel">
+<label for="youtubeUrlInput">
+         YouTube URL or video ID
+        </label>
+<input autocomplete="off" id="youtubeUrlInput" spellcheck="false" type="text" value="https://www.youtube.com/watch?v=5gEKxnUhZ18"/>
+<div class="button-row">
+<button id="loadYoutubeButton" type="button">
+          Load YouTube in controller preview
+         </button>
+</div>
+<p class="help">
+         YouTube publishing must be started from the PC Controller. Android
+                tablets should join as Viewer and receive the published stream.
+        </p>
+<p class="help device-notice hidden" id="youtubeDeviceNotice">
+         This Android tablet is Viewer-only for YouTube. Browser-tab sharing
+                is unavailable here, so use the PC Controller to publish YouTube.
+        </p>
+</div>
+</div>
+</details>
+<details class="sub-dropdown" id="controllerScheduleSection">
+<summary>
+<span>
+<strong>
+         Playback schedule
+        </strong>
+<small>
+         Set the allowed time zone, weekdays, and operating hours.
+        </small>
+</span>
+<span aria-hidden="true" class="summary-chevron">
+</span>
+</summary>
+<div class="sub-dropdown-content">
+<div class="schedule-card">
+<div class="schedule-heading">
+<div>
+<p class="step">
+           Playback schedule
+          </p>
+<h3>
+           Allowed operating time
+          </h3>
+</div>
+<label class="check-field">
+<input checked="" id="scheduleEnabledInput" type="checkbox"/>
+          Use schedule
+         </label>
+</div>
+<div class="schedule-grid">
+<div class="field">
+<label for="scheduleTimeZoneInput">
+           Time zone
+          </label>
+<input autocomplete="off" id="scheduleTimeZoneInput" placeholder="Asia/Seoul" spellcheck="false" type="text" value="Asia/Seoul"/>
+</div>
+<div class="field">
+<label for="scheduleStartInput">
+           Start time
+          </label>
+<input id="scheduleStartInput" type="time" value="09:00"/>
+</div>
+<div class="field">
+<label for="scheduleEndInput">
+           End time
+          </label>
+<input id="scheduleEndInput" type="time" value="19:00"/>
+</div>
+<label class="check-field weekend-check">
+<input id="scheduleSaturdayInput" type="checkbox"/>
+          Allow Saturday
+         </label>
+<label class="check-field weekend-check">
+<input id="scheduleSundayInput" type="checkbox"/>
+          Allow Sunday
+         </label>
+</div>
+<p class="schedule-status" id="scheduleStatus">
+         Checking playback schedule…
+        </p>
+<p class="help">
+         Default: Monday–Friday, 09:00–19:00 in Asia/Seoul.
+                Saturday and Sunday are disabled. The controller pauses and
+                unpublishes outside the allowed period.
+        </p>
+</div>
+</div>
+</details>
+</div>
+</section><section class="card hidden" id="viewerPanel">
+<div class="section-heading">
+<div>
+<p class="step">
+       Viewer
+      </p>
+<h2>
+       Live controller broadcast
+      </h2>
+</div>
+<div class="viewer-actions">
+<span class="low-latency-badge">
+       Low-latency mode
+      </span>
+<button id="enableSoundButton" type="button">
+       Sound ON — 100%
+      </button>
+</div>
+</div>
+<div class="video-shell viewer-video-shell" id="viewerVideoShell">
+<video autoplay="" id="remoteVideo" muted="" playsinline="" preload="auto">
+</video>
+<audio autoplay="" id="remoteAudio" preload="auto">
+</audio>
+</div>
+<p class="viewer-waiting-text" id="viewerWaitingText">
+     Waiting for the controller to publish a video.
+    </p>
+</section><details class="card collapsible-card" id="joinPanel" open="">
+<summary class="collapsible-summary">
+<span class="summary-title-wrap">
+<span class="step">
+       Step 1
+      </span>
+<span class="summary-title">
+       Join the broadcast room
+      </span>
+</span>
+<span aria-hidden="true" class="summary-chevron">
+</span>
+</summary>
+<div class="collapsible-content">
+<div class="room-grid">
+<div class="field">
+<label for="roomInput">
+        Room ID
+       </label>
+<input autocomplete="off" id="roomInput" maxlength="60" spellcheck="false" type="text" value="main-room"/>
+</div>
+<div class="field">
+<label for="tokenServerInput">
+        LiveKit sandbox ID or URL
+       </label>
+<input autocomplete="off" id="tokenServerInput" maxlength="120" placeholder="syncvideocgs-2gke1g or full sandbox URL" spellcheck="false" type="text" value="syncvideocgs-2gke1g"/>
+</div>
+<button class="primary" id="joinViewerButton" type="button">
+       Join as viewer with sound
+      </button>
+<button id="joinControllerButton" type="button">
+       Join as controller
+      </button>
+</div>
+<div class="button-row">
+<button id="copyViewerLinkButton" type="button">
+       Copy viewer link
+      </button>
+<button class="danger" disabled="" id="leaveRoomButton" type="button">
+       Leave room
+      </button>
+<label class="check-field compact-check">
+<input checked="" id="autoRestoreInput" type="checkbox"/>
+       Reopen with last role and resume
+      </label>
+</div>
+<p class="help">
+      Enable the Token server in LiveKit Cloud Project Settings and paste
+          its public ID above. Use only one controller per room.
+     </p>
+</div>
+</details><details class="card collapsible-card" id="connectionPanel">
+<summary class="collapsible-summary">
+<span class="summary-title-wrap">
+<span class="step">
+       Status
+      </span>
+<span class="summary-title">
+       Connection status
+      </span>
+</span>
+<span aria-hidden="true" class="summary-chevron">
+</span>
+</summary>
+<div class="collapsible-content">
+<div class="status-toolbar">
+<div class="badges">
+<span class="badge standby" id="serviceBadge">
+        LiveKit standby
+       </span>
+<span class="badge" id="roleBadge">
+        Not joined
+       </span>
+<span class="badge" id="participantBadge">
+        0 participants
+       </span>
+</div>
+<div class="access-action-buttons">
+<button class="lock-button" id="changePasswordButton" type="button">
+       Change password
+      </button>
+<button class="lock-button" id="lockAccessButton" type="button">
+       Lock
+      </button>
+</div>
+</div>
+<div class="status-grid">
+<div class="status-item">
+<strong>
+        Room
+       </strong>
+<span id="roomStatus">
+        Not joined
+       </span>
+</div>
+<div class="status-item">
+<strong>
+        Media
+       </strong>
+<span id="mediaStatus">
+        No active stream
+       </span>
+</div>
+<div class="status-item">
+<strong>
+        LiveKit
+       </strong>
+<span id="connectionStatus">
+        Disconnected
+       </span>
+</div>
+</div>
+<p class="warning">
+<strong>
+       Testing mode:
+      </strong>
+      LiveKit Cloud’s public token server requires no backend, but it does
+          not securely enforce Controller and Viewer permissions. Use a private,
+          difficult-to-guess room ID.
+     </p>
+<p class="error hidden" id="errorBox" role="alert">
+</p>
+</div>
+</details>
+<div aria-hidden="true" class="password-modal hidden" id="passwordModal">
+<div class="password-modal-backdrop" data-close-password-modal="true"></div>
+<section aria-labelledby="changePasswordTitle" aria-modal="true" class="password-modal-card" role="dialog">
+<div class="password-modal-heading">
+<div>
+<p class="step">Security</p>
+<h2 id="changePasswordTitle">Change password</h2>
+</div>
+<button aria-label="Close password settings" class="modal-close-button" id="closePasswordModalButton" type="button">×</button>
+</div>
+<form autocomplete="off" id="changePasswordForm">
+<label for="currentPasswordInput">Current password</label>
+<input autocomplete="current-password" id="currentPasswordInput" maxlength="80" required type="password"/>
+<label for="newPasswordInput">New password</label>
+<input autocomplete="new-password" id="newPasswordInput" maxlength="80" minlength="4" required type="password"/>
+<label for="confirmPasswordInput">Confirm new password</label>
+<input autocomplete="new-password" id="confirmPasswordInput" maxlength="80" minlength="4" required type="password"/>
+<p class="password-help">Use at least 4 characters. The changed password is saved in this browser.</p>
+<p class="access-error hidden" id="changePasswordError" role="alert"></p>
+<p class="password-success hidden" id="changePasswordSuccess" role="status"></p>
+<div class="password-modal-actions">
+<button id="cancelPasswordButton" type="button">Cancel</button>
+<button class="primary" type="submit">Save password</button>
+</div>
+</form>
+</section>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.20.1/dist/livekit-client.umd.min.js">
+</script>
+<script src="./app.js?build=35">
+</script>
+<script src="https://www.youtube.com/iframe_api">
+</script>
+</body>
+</html>
