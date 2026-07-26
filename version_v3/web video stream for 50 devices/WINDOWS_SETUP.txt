@@ -1,0 +1,38 @@
+WEB VIDEO STREAM FOR 50 DEVICES — VERSION 18
+
+TARGET FOLDER:
+C:\Users\eeric\OneDrive\Documents\web site develop\web video stream for 50 devices
+
+LIVEKIT SANDBOX URL:
+https://syncvideocgs-2gke1g.sandbox.livekit.io
+
+LIVEKIT SANDBOX ID:
+syncvideocgs-2gke1g
+
+The website accepts either value.
+
+DEPLOY:
+1. Extract this project to the target folder.
+2. Run: npm install -g firebase-tools
+3. Double-click firebase_login.bat
+4. Double-click deploy_website.bat
+
+WEBSITE:
+https://syncvideocgs.web.app/?v=23
+
+Firebase Functions are not used.
+
+
+VERSION 19 CHANGES
+------------------
+- Big blue Enable sound and play overlay removed.
+- YouTube loads inside the controller preview.
+- Publish YouTube shares the current SyncVid tab.
+- Enable Share tab audio in the browser dialog.
+
+
+VERSION 20
+----------
+The viewer video is always visible.
+The dark overlay and center blue sound button were removed completely.
+Only the small top-right sound button remains.
